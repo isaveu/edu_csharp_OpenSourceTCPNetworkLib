@@ -4,6 +4,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
 
+//TODO SocketNetUtil 사용하기
 namespace MGAsyncNet
 {
     class BufferManagerAsync

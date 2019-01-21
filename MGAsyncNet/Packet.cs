@@ -9,9 +9,7 @@ namespace MGAsyncNet
         byte[] Buffer;
         int BufferPos = 0;
 
-        //public int PacketLen { get; set;  } // 삭제 예정
-
-        public byte[] GetBuffer() { return Buffer; }
+       public byte[] GetBuffer() { return Buffer; }
         
         public Packet(int bufferSize = BUFFER_SIZE)
         {
