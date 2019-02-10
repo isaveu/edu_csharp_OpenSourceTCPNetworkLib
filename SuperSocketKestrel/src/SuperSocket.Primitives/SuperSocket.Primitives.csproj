@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\tools\Common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>portable</DebugType>
@@ -7,8 +6,8 @@
     <PackageId>SuperSocket.Primitives</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Runtime" Version="$(CoreFxVersion)" />
-    <PackageReference Include="System.Net.Primitives" Version="$(CoreFxVersion)" />
-    <PackageReference Include="System.IO.Pipelines" Version="$(PipelinesVersion)" />
+    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="4.5.3" />
   </ItemGroup>
 </Project>

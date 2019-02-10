@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\tools\Common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Memory" Version="$(SystemBuffersVersion)" />
+    <PackageReference Include="System.Memory" Version="4.5.2" />
   </ItemGroup>
 </Project>
