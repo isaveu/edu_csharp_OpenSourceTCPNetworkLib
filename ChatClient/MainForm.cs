@@ -237,6 +237,9 @@ namespace ChatClient
              PrintLog("서버에 Echo 요청");
 
             var sendData = new byte[] { 1, 2, 3, (byte)'\r', (byte)'\n', 4, 5, (byte)'\r' };
+            //var temp_sendData = new byte[] { 1, 2, 3, (byte)'\r', (byte)'\n', 4, 5, (byte)'\r' };
+            //var sendData = new byte[1000];
+            //Buffer.BlockCopy(temp_sendData, 0, sendData, 990, temp_sendData.Length);
             PostSendPacket(sendData);
         }
 
