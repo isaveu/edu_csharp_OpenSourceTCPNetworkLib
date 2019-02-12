@@ -55,6 +55,7 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnEcho = new System.Windows.Forms.Button();
             this.textBoxEcho = new System.Windows.Forms.TextBox();
+            this.button6 = new System.Windows.Forms.Button();
             this.groupBox5.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -335,6 +336,7 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.button6);
             this.groupBox3.Controls.Add(this.btnEcho);
             this.groupBox3.Controls.Add(this.textBoxEcho);
             this.groupBox3.Location = new System.Drawing.Point(18, 182);
@@ -349,9 +351,9 @@
             this.btnEcho.Location = new System.Drawing.Point(392, 17);
             this.btnEcho.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnEcho.Name = "btnEcho";
-            this.btnEcho.Size = new System.Drawing.Size(60, 29);
+            this.btnEcho.Size = new System.Drawing.Size(133, 29);
             this.btnEcho.TabIndex = 29;
-            this.btnEcho.Text = "echo";
+            this.btnEcho.Text = "echo(\\r\\n)";
             this.btnEcho.UseVisualStyleBackColor = true;
             this.btnEcho.Click += new System.EventHandler(this.btnEcho_Click);
             // 
@@ -365,6 +367,17 @@
             this.textBoxEcho.TabIndex = 28;
             this.textBoxEcho.Text = "test1";
             this.textBoxEcho.WordWrap = false;
+            // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(533, 17);
+            this.button6.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(101, 29);
+            this.button6.TabIndex = 30;
+            this.button6.Text = "echo(TLV)";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // MainForm
             // 
@@ -422,6 +435,7 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button btnEcho;
         private System.Windows.Forms.TextBox textBoxEcho;
+        private System.Windows.Forms.Button button6;
     }
 }
 

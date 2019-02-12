@@ -149,7 +149,7 @@ namespace ChatClient
                             RecvPacketQueue.Enqueue(packet);
                         }
                     }
-                    //DevLog.Write($"받은 데이터: {recvData.Item2}", LOG_LEVEL.INFO);
+                    DevLog.Write($"받은 데이터: {recvData.Item1}", LOG_LEVEL.DEBUG);
                 }
                 else
                 {
@@ -232,6 +232,7 @@ namespace ChatClient
             Network.Close();
         }
 
+        //에코 - 텍스트 프로토콜
         private void btnEcho_Click(object sender, EventArgs e)
         {
              PrintLog("서버에 Echo 요청");
@@ -241,6 +242,32 @@ namespace ChatClient
             //var sendData = new byte[1000];
             //Buffer.BlockCopy(temp_sendData, 0, sendData, 990, temp_sendData.Length);
             PostSendPacket(sendData);
+        }
+
+        // 에코 - TLV 프로토콜
+        private void button6_Click(object sender, EventArgs e)
+        {
+            byte type = 0;
+            var pktID = (UInt16)11;
+
+            Int16 bodyDataSize = 6;                        
+            var bodyData = new byte[bodyDataSize];
+            Random rnd = new Random();
+            rnd.NextBytes(bodyData);
+
+            var packetSize = (UInt16)(bodyDataSize + PacketDef.PACKET_HEADER_SIZE);
+
+            var dataSource = new byte[packetSize];
+            Buffer.BlockCopy(BitConverter.GetBytes(packetSize), 0, dataSource, 0, 2);
+            Buffer.BlockCopy(BitConverter.GetBytes(pktID), 0, dataSource, 2, 2);
+            dataSource[4] = type;
+
+            if (bodyData != null)
+            {
+                Buffer.BlockCopy(bodyData, 0, dataSource, 5, bodyDataSize);
+            }
+
+            PostSendPacket(dataSource);
         }
 
         // 로그 인/아웃
@@ -428,7 +455,7 @@ namespace ChatClient
             }            
         }
 
-       
+        
     }
 
     enum CLIENT_STATE
