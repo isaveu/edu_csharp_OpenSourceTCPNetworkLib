@@ -30,19 +30,7 @@
   
   <ItemGroup>
     <Reference Include="C3SockNetUtil">
-      <HintPath>..\..\..\03_C3SockNetUtil\bin\netstandard2.0\C3SockNetUtil.dll</HintPath>
-    </Reference>
-    <Reference Include="SuperSocket.Common">
-      <HintPath>..\..\..\01_SuperSocketLite\bin\netstandard2.0\SuperSocket.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="SuperSocket.Facility">
-      <HintPath>..\..\..\01_SuperSocketLite\bin\netstandard2.0\SuperSocket.Facility.dll</HintPath>
-    </Reference>
-    <Reference Include="SuperSocket.SocketBase">
-      <HintPath>..\..\..\01_SuperSocketLite\bin\netstandard2.0\SuperSocket.SocketBase.dll</HintPath>
-    </Reference>
-    <Reference Include="SuperSocket.SocketEngine">
-      <HintPath>..\..\..\01_SuperSocketLite\bin\netstandard2.0\SuperSocket.SocketEngine.dll</HintPath>
+      <HintPath>..\thirdparty\C3SockNetUtil.dll</HintPath>
     </Reference>
   </ItemGroup>
 

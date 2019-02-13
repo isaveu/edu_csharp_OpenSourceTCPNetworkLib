@@ -90,8 +90,18 @@ namespace MySuperSocketCore
             return await _socket.SendAsync(GetArrayByMemory(buffer), SocketFlags.None);
         }
 
+        public override async Task<int> SendAsync(ArraySegment<byte> buffer)
+        {
+            return await _socket.SendAsync(buffer, SocketFlags.None);
+        }
+
         public override void SendTask(ReadOnlyMemory<byte> buffer)
         {  
+            Task.Run(() => RealSend(buffer));
+        }
+
+        public override void SendTask(ArraySegment<byte> buffer)
+        {
             Task.Run(() => RealSend(buffer));
         }
 
@@ -132,5 +142,6 @@ namespace MySuperSocketCore
             }
 
         }
-    }
+
+        
 }
