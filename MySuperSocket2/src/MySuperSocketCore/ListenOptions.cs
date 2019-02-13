@@ -1,0 +1,13 @@
+namespace MySuperSocketCore
+{
+    public class ListenOptions
+    {
+        public string Ip { get; set; }
+
+        public int Port  { get; set; }
+
+        public int BackLog { get; set; }
+
+        public bool NoDelay { get; set; }
+    }
+}
