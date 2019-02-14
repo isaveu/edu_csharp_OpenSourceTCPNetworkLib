@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <Compile Remove="FilterResult.cs" />
+    <Compile Remove="IAppSession.cs" />
+    <Compile Remove="IChannel.cs" />
     <Compile Remove="LinePackageInfo.cs" />
   </ItemGroup>
 

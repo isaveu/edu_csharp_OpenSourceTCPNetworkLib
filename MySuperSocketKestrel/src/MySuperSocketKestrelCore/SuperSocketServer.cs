@@ -44,7 +44,7 @@ namespace MySuperSocketKestrelCore
         public bool Configure<TPipelineFilter>(ServerOptions options, 
                                                                                                                 IServiceCollection services = null, 
                                                                                                                 ITransportFactory transportFactory = null, 
-                                                                                                                Action<IAppSession, AnalyzedPacket> packageHandler = null
+                                                                                                                Action<AppSession, AnalyzedPacket> packageHandler = null
             )
             where TPipelineFilter : IPipelineFilter, new()
         {

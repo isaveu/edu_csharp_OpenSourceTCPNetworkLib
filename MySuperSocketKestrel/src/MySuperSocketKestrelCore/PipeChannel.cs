@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace MySuperSocketKestrelCore
 {
-    public class PipeChannel : ChannelBase, IChannel
+    public class PipeChannel : ChannelBase
     {
         private IPipelineFilter _pipelineFilter;
 

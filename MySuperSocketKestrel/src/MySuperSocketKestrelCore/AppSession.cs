@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace MySuperSocketKestrelCore
 {
-    public class AppSession : PipeChannel, IAppSession
+    public class AppSession
     {
-        public AppSession(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
-            : base(transportConnection, pipelineFilter)
+        public AppSession(/*TransportConnection transportConnection,*/ ChannelBase channel)
         {
-
+            Channel = channel;
         }
 
-        public IServer Server { get; internal set; }
+ 
+        public ChannelBase Channel { get; private set; }
     }
 }

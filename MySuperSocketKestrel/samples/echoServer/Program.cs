@@ -17,7 +17,7 @@ namespace TestApp
 {
     class Program
     {
-        static IServer CreateSocketServer<TPipelineFilter>(Dictionary<string, string> configDict = null, Action<IAppSession, AnalyzedPacket> packageHandler = null)
+        static IServer CreateSocketServer<TPipelineFilter>(Dictionary<string, string> configDict = null, Action<AppSession, AnalyzedPacket> packageHandler = null)
             where TPipelineFilter : IPipelineFilter, new()
         {
             if (configDict == null)
@@ -58,7 +58,7 @@ namespace TestApp
         {
             var server = CreateSocketServer<LinePipelineFilter>(packageHandler: async (s, p) => 
             {
-                await s.SendAsync(p.Body.AsSpan());                
+                await s.Channel.SendAsync(p.Body.AsSpan());                
             });
             
             server.StartAsync().Wait();

@@ -41,6 +41,7 @@ namespace MySuperSocketKestrelCore
             // This *must* be set before returning from OnConnection
             connection.Application = pair.Application;
 
+            //TODO 핸들러를 만들어서 이 핸들러 함수는 SuperSocketServer에서 연결시킨다. Session 객체를 반환하도록 한다.
 
             var session = new AppSession(connection, new TPipelineFilter());
 
