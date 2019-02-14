@@ -10,10 +10,18 @@ namespace MySuperSocketCore
     {
         Socket _socket;
 
-        Int32 MaxPacketSize = 0;
+        const Int64 ENABLE_SENDING = 1;
+        Int64 IsEnableSending = ENABLE_SENDING;
+        TcpSendState CurSendState = TcpSendState.NORMAL;
+        Int64 CurrentSendingLength = 0;
+
+        Int32 MaxRecvPacketSize = 0;
+        Int32 MaxRecvBufferSize = 0;
+
+        Int32 MaxSendPacketSize = 0;
         Int32 MaxSendingSize = 0;
-        Int32 MaxReTryCount = 0;
-        Int32 CurrentSendingLength = 0;
+        Int32 MaxSendReTryCount = 0;        
+
 
         public TcpPipeChannel(Socket socket, IPipelineFilter pipelineFilter)
             : base(pipelineFilter)
@@ -21,15 +29,26 @@ namespace MySuperSocketCore
             _socket = socket;
         }
 
+        public override void SetSendOption(int maxPacketSize, int maxSendingSize, int maxReTryCount)
+        {
+            MaxSendPacketSize = maxPacketSize;
+            MaxSendingSize = maxSendingSize;
+            MaxSendReTryCount = maxReTryCount;
+        }
+
+        public override void SetRecvOption(int maxPacketSize, int maxBufferSize)
+        {
+            MaxRecvPacketSize = maxPacketSize;
+            MaxRecvBufferSize = maxBufferSize;
+        }
+
         private async Task FillPipeAsync(Socket socket, PipeWriter writer)
         {
-            const int minimumBufferSize = 512;
-
             while (true)
             {
                 try
                 {
-                    Memory<byte> memory = writer.GetMemory(minimumBufferSize);
+                    Memory<byte> memory = writer.GetMemory(MaxRecvBufferSize);
                     int bytesRead = await ReceiveAsync(socket, memory, SocketFlags.None);
 
                     if (bytesRead == 0)
@@ -43,7 +62,7 @@ namespace MySuperSocketCore
                 catch
                 {
                     //GLogging.Logger().LogError($"Dis Connected: {socket.GetHashCode()} , threadId:{System.Threading.Thread.CurrentThread.ManagedThreadId}");
-                    break;                    
+                    break;
                 }
 
                 // Make the data available to the PipeReader
@@ -75,48 +94,60 @@ namespace MySuperSocketCore
 
             _socket = null;
         }
-
-
-        //TODO 옵션에 따라서 사용하도록 하자
-        public override void SetSendLimit(int maxPacketSize, int maxSendingSize, int maxReTryCount)
-        {
-            MaxPacketSize = maxPacketSize;
-            MaxSendingSize = maxSendingSize;
-            MaxReTryCount = maxReTryCount;
-        }
-
+                       
         public override async Task<int> SendAsync(ReadOnlyMemory<byte> buffer)
         {
+            if(IsEnableSend() == false)
+            {
+                return 0;
+            }
+
             return await _socket.SendAsync(GetArrayByMemory(buffer), SocketFlags.None);
         }
 
         public override async Task<int> SendAsync(ArraySegment<byte> buffer)
         {
+            if (IsEnableSend() == false)
+            {
+                return 0;
+            }
+
             return await _socket.SendAsync(buffer, SocketFlags.None);
         }
 
         public override void SendTask(ReadOnlyMemory<byte> buffer)
-        {  
+        {
+            if (IsEnableSend() == false)
+            {
+                return;
+            }
+
             Task.Run(() => RealSend(buffer));
         }
 
         public override void SendTask(ArraySegment<byte> buffer)
         {
+            if (IsEnableSend() == false)
+            {
+                return;
+            }
+
             Task.Run(() => RealSend(buffer));
         }
 
-        //TODO 일부러 send buffer를 잡게 잡고, 클라이언트는 redv 버퍼를 작게 잡고, receive를 하지 않도록 해본다
+        //TODO 일부러 send buffer를 작게 잡고, 클라이언트는 redv 버퍼를 작게 잡고, receive를 하지 않도록 해본다
         async Task RealSend(ReadOnlyMemory<byte> buffer)
         {
-            var enableSend = true;
+            if(IsSendingTooMuch())
+            {
+                SetInvalideSendState(TcpSendState.SENDING_SIZE_OVER);
+                return;
+            }
+            
             System.Threading.Interlocked.Add(ref CurrentSendingLength, buffer.Length);
-
-            //TODO 지정 횟수 이상으로 보내기 완료가 안되면 에러로 판정. 완료하면 보내기 시도 횟수는 0으로 설정.            
-            //TODO 현재 보내 예정인 양이 지정한 것보다 크면 이것도 에러로 판정.
-            //TODO 위에서 에러가 나면 사용 불가로 설정.
-
-            //TODO 무한 반복에 빠지지 않도록 해야 한다.
-            while (enableSend)
+                        
+            var tryCount = 1;
+            while (IsEnableSend() && tryCount <= MaxSendReTryCount)
             {
                 try
                 {
@@ -129,19 +160,54 @@ namespace MySuperSocketCore
                     {
                         return;
                     }
-                    else
+                    else 
                     {
+                        ++tryCount;
+
+                        if (sendLen == 0)
+                        {
+                            continue;
+                        }
+                            
                         buffer = buffer.Slice(sendLen, (expertLen - sendLen));
-                    }                    
+                    }
                 }
                 catch
                 {
-                    //TODO 에러 처리하고, 로그 남기기
+                    SetInvalideSendState(TcpSendState.RISE_EXCEPTION);
                     return;
                 }
             }
 
+            SetInvalideSendState(TcpSendState.RE_TRY_OVER);
         }
 
-        
+        void SetInvalideSendState(TcpSendState state)
+        {
+            if(System.Threading.Interlocked.CompareExchange(ref IsEnableSending, 0, 1) == 0)
+            {
+                CurSendState = state;
+            }
+        }
+
+        bool IsEnableSend()
+        {
+            return System.Threading.Interlocked.Read(ref IsEnableSending) == ENABLE_SENDING;
+        }
+
+        bool IsSendingTooMuch()
+        {
+            return System.Threading.Interlocked.Read(ref CurrentSendingLength) > MaxSendingSize;            
+        }
+
+    } 
+    
+    
+    public enum TcpSendState
+    {
+        NORMAL = 0,
+        SENDING_SIZE_OVER = 1,
+        RE_TRY_OVER = 2, 
+        RISE_EXCEPTION = 3
+    }
 }

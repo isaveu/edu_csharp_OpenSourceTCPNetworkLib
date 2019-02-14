@@ -10,6 +10,7 @@ using NLog.Extensions.Logging;
 namespace MySuperSocketCore
 {
     //TODO 패킷 인코딩은 body에 참조를 넘기는 것, 새로 할당 후 복사하는 버전 각각 있어여 한다
+    //TODO Send용 ArraySegment 혹은 메모리풀을 사용하여 send 때 메모리 재 사용하자.
     //TODO messagepack의 span 지원. 이것을 사용해야 한다 https://github.com/AArnott/MessagePack-CSharp
     //TODO 범용성 높이기
 
@@ -109,6 +110,10 @@ namespace MySuperSocketCore
 
         protected virtual void OnNewClientAccept(IListener listener, ChannelBase channel)
         {
+            var option = listener.Options;
+            channel.SetRecvOption(option.MaxRecvPacketSize, option.MaxReceivBufferSize);
+            channel.SetSendOption(option.MaxSendPacketSize, option.MaxSendingSize, option.MaxReTryCount);
+
             var session = new AppSession(this, channel);
 
             NetEventOnConnect(session);

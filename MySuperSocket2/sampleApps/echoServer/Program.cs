@@ -36,7 +36,14 @@ namespace echoServer
             packet.SessionUniqueId = session.UniqueId;
             Logger.LogInformation($"[NetEventOnReceive] session: {session.SessionID}, ReceiveDataSize:{packet.Body.Length}");
 
-            //session.Channel.SendAsync(packet.Body.AsMemory());
+            var pktID = packet.PacketId + 1;
+            var packetLen = packet.Body.Length + 5;
+            var dataSource = new byte[packetLen];
+            Buffer.BlockCopy(BitConverter.GetBytes(packetLen), 0, dataSource, 0, 2);
+            Buffer.BlockCopy(BitConverter.GetBytes(pktID), 0, dataSource, 2, 2);
+            dataSource[4] = 0;
+            Buffer.BlockCopy(packet.Body, 0, dataSource, 5, packet.Body.Length);
+           
             session.Channel.SendTask(packet.Body.AsMemory());
         }
         
@@ -51,6 +58,11 @@ namespace echoServer
             serverOption.Listeners[0].Ip = "Any";
             serverOption.Listeners[0].Port = 11021;
             serverOption.Listeners[0].BackLog = 100;
+            serverOption.Listeners[0].MaxRecvPacketSize = 512;
+            serverOption.Listeners[0].MaxReceivBufferSize = 512 * 3;
+            serverOption.Listeners[0].MaxSendPacketSize = 1024;            
+            serverOption.Listeners[0].MaxSendingSize = 4096; 
+            serverOption.Listeners[0].MaxReTryCount = 3;
 
             var server = CreateSocketServer<BinaryPipelineFilter>(serverOption);
             await server.StartAsync();
@@ -98,6 +110,11 @@ namespace echoServer
             parameter.serverOption.Listeners[0].Ip = "Any";
             parameter.serverOption.Listeners[0].Port = 11021;
             parameter.serverOption.Listeners[0].BackLog = 100;
+            parameter.serverOption.Listeners[0].MaxRecvPacketSize = 512;
+            parameter.serverOption.Listeners[0].MaxReceivBufferSize = 512 * 3;
+            parameter.serverOption.Listeners[0].MaxSendPacketSize = 1024;            
+            parameter.serverOption.Listeners[0].MaxSendingSize = 4096;
+            parameter.serverOption.Listeners[0].MaxReTryCount = 3;
 
             var pipelineFilterFactoryList = new List<IPipelineFilterFactory>();
             pipelineFilterFactoryList.Add(new DefaultPipelineFilterFactory<BinaryPipelineFilter>());

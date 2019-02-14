@@ -17,6 +17,8 @@ namespace MySuperSocketCore
 
         public Action<AnalyzedPacket> OnPackageReceived;
 
-        public abstract void SetSendLimit(int maxPacketSize, int maxSendingSize, int maxReTryCount);
+        public abstract void SetSendOption(int maxPacketSize, int maxSendingSize, int maxReTryCount);
+
+        public abstract void SetRecvOption(int maxPacketSize, int maxBufferSize);
     }
 }

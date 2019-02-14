@@ -139,8 +139,8 @@ namespace ChatClient
                         }
 
                         var packet = new PacketData();
-                        packet.DataSize = (short)(data.Count - PacketHeaderSize);
-                        packet.PacketID = BitConverter.ToInt16(data.Array, data.Offset + 2);
+                        packet.DataSize = (UInt16)(data.Count - PacketHeaderSize);
+                        packet.PacketID = BitConverter.ToUInt16(data.Array, data.Offset + 2);
                         packet.Type = (SByte)data.Array[(data.Offset + 4)];
                         packet.BodyData = new byte[packet.DataSize];
                         Buffer.BlockCopy(data.Array, (data.Offset + PacketHeaderSize), packet.BodyData, 0, (data.Count - PacketHeaderSize));
@@ -154,8 +154,16 @@ namespace ChatClient
                 else
                 {
                     Network.Close();
-                    SetDisconnectd();
+                    
                     DevLog.Write("서버와 접속 종료 !!!", LOG_LEVEL.INFO);
+
+                    var packet = new PacketData();
+                    packet.PacketID = (UInt16)(PACKETID.NTF_CLIENT_CLOSED);
+
+                    lock (((System.Collections.ICollection)RecvPacketQueue).SyncRoot)
+                    {
+                        RecvPacketQueue.Enqueue(packet);
+                    }
                 }
             }
         }
@@ -248,7 +256,7 @@ namespace ChatClient
         private void button6_Click(object sender, EventArgs e)
         {
             byte type = 0;
-            var pktID = (UInt16)11;
+            var pktID = (UInt16)PACKETID.REQ_TEST_ECHO;
 
             Int16 bodyDataSize = 6;                        
             var bodyData = new byte[bodyDataSize];
@@ -354,6 +362,11 @@ namespace ChatClient
         {
             switch((PACKETID)packet.PacketID)
             {
+                case PACKETID.NTF_CLIENT_CLOSED:
+                    {
+                        SetDisconnectd();
+                    }
+                    break;
                 case PACKETID.RES_LOGIN:
                     {
                         var resData = MessagePackSerializer.Deserialize<PKTResLogin>(packet.BodyData);
@@ -468,8 +481,8 @@ namespace ChatClient
 
     struct PacketData
     {
-        public Int16 DataSize;
-        public Int16 PacketID;
+        public UInt16 DataSize;
+        public UInt16 PacketID;
         public SByte Type;
         public byte[] BodyData;
     }

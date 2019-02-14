@@ -37,9 +37,11 @@ namespace CSBaseLib
     // 1 ~ 10000
     public enum PACKETID : int
     {
-        REQ_TEST_ECHO = 1,
-        RES_TEST_ECHO = 2,
-               
+        NTF_CLIENT_CLOSED = 2,
+
+        REQ_TEST_ECHO = 11,
+        RES_TEST_ECHO = 12,
+                              
         // 클라이언트
         CS_BEGIN        = 1001,
 

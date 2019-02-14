@@ -66,7 +66,7 @@ namespace ChatClient
                 return new ArraySegment<byte>();
             }
 
-            var packetDataSize = BitConverter.ToInt16(PacketData, ReadPos);
+            var packetDataSize = BitConverter.ToUInt16(PacketData, ReadPos);
             if (enableReadSize < packetDataSize)
             {
                 return new ArraySegment<byte>();
