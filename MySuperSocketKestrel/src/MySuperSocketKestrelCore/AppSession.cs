@@ -7,10 +7,9 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace MySuperSocketKestrelCore
 {
-    public class AppSession<TPackageInfo> : PipeChannel<TPackageInfo>, IAppSession
-        where TPackageInfo : class
+    public class AppSession : PipeChannel, IAppSession
     {
-        public AppSession(TransportConnection transportConnection, IPipelineFilter<TPackageInfo> pipelineFilter)
+        public AppSession(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
             : base(transportConnection, pipelineFilter)
         {
 

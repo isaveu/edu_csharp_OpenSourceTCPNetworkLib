@@ -5,24 +5,18 @@ using System.Threading.Tasks;
 
 namespace MySuperSocketKestrelCore
 {
-    public abstract class TerminatorPipelineFilter<TPackageInfo> : PipelineFilterBase<TPackageInfo>
-        where TPackageInfo : class
-    {
-        //private byte[] _terminator;        
-        //public TerminatorPipelineFilter(byte[] terminator)
-        //{
-        //    _terminator = terminator;
-        //}
-
+    public abstract class TerminatorPipelineFilter : PipelineFilterBase
+    {        
         int TerminatorLen = 0;
         private Func<ReadOnlySequence<byte>, bool > CheckFunc;
+
         public TerminatorPipelineFilter(Func<ReadOnlySequence<byte>, bool> checkFunc, int terminatorLen)
         {
             CheckFunc = checkFunc;
             TerminatorLen = terminatorLen;
         }
 
-        public override TPackageInfo Filter(ref ReadOnlySequence<byte> buffer)
+        public override AnalyzedPacket Filter(ref ReadOnlySequence<byte> buffer)
         {
             try
             {
@@ -44,6 +38,6 @@ namespace MySuperSocketKestrelCore
             }
         }
 
-        public abstract TPackageInfo ResolvePackage(ReadOnlySequence<byte> buffer);
+        public abstract AnalyzedPacket ResolvePackage(ReadOnlySequence<byte> buffer);
     }
 }

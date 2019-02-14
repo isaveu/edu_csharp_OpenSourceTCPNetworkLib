@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MySuperSocketKestrelCore
 {
-    public class LinePipelineFilter : TerminatorPipelineFilter<LinePackageInfo>
+    public class LinePipelineFilter : TerminatorPipelineFilter
     {
 
         public LinePipelineFilter()
@@ -30,9 +30,15 @@ namespace MySuperSocketKestrelCore
             return false;
         }
 
-        public override LinePackageInfo ResolvePackage(ReadOnlySequence<byte> buffer)
+        public override AnalyzedPacket ResolvePackage(ReadOnlySequence<byte> buffer)
         {
-            return new LinePackageInfo { Line = buffer.ToString() };
+            return new AnalyzedPacket { Body = buffer.ToArray() };
         }
     }
+
+
+    //public class LinePackageInfo
+    //{
+    //    public string Line { get; set; }
+    //}
 }

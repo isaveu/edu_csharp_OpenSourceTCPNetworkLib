@@ -7,14 +7,13 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace MySuperSocketKestrelCore
 {
-    public class PipeChannel<TPackageInfo> : ChannelBase<TPackageInfo>, IChannel<TPackageInfo>, IChannel
-        where TPackageInfo : class
+    public class PipeChannel : ChannelBase, IChannel
     {
-        private IPipelineFilter<TPackageInfo> _pipelineFilter;
+        private IPipelineFilter _pipelineFilter;
 
         private TransportConnection _transportConnection;
         
-        public PipeChannel(TransportConnection transportConnection, IPipelineFilter<TPackageInfo> pipelineFilter)
+        public PipeChannel(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
         {
             _transportConnection = transportConnection;
             _pipelineFilter = pipelineFilter;

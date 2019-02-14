@@ -1,14 +1,9 @@
 using System;
-using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Threading;
-using System.IO.Pipelines;
 using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using NLog.Extensions.Logging;
@@ -46,13 +41,12 @@ namespace MySuperSocketKestrelCore
 
         private ITransportFactory _transportFactory;
         
-        public bool Configure<TPackageInfo, TPipelineFilter>(ServerOptions options, 
+        public bool Configure<TPipelineFilter>(ServerOptions options, 
                                                                                                                 IServiceCollection services = null, 
                                                                                                                 ITransportFactory transportFactory = null, 
-                                                                                                                Action<IAppSession, TPackageInfo> packageHandler = null
+                                                                                                                Action<IAppSession, AnalyzedPacket> packageHandler = null
             )
-            where TPackageInfo : class
-            where TPipelineFilter : IPipelineFilter<TPackageInfo>, new()
+            where TPipelineFilter : IPipelineFilter, new()
         {
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
@@ -65,12 +59,10 @@ namespace MySuperSocketKestrelCore
             if (services == null)
                 services = new ServiceCollection();
 
-            // prepare service collections
             _serviceCollection = services.AddOptions(); // activate options     
 
             _serviceCollection.AddSingleton<IApplicationLifetime, SuperSocketApplicationLifetime>();
 
-            // build service provider
             _serviceProvider = services.BuildServiceProvider();
 
             // initialize logger factory  // 기본 콘솔 로그 사용 시
@@ -90,7 +82,7 @@ namespace MySuperSocketKestrelCore
                 }
             }
 
-            _connectionDispatcher = new ConnectionDispatcher<TPackageInfo, TPipelineFilter>();
+            _connectionDispatcher = new ConnectionDispatcher<TPipelineFilter>();
 
             _transports = new List<ITransport>();
 

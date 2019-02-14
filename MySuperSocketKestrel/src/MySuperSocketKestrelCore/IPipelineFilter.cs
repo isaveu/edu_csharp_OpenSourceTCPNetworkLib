@@ -3,11 +3,19 @@ using System.Buffers;
 
 namespace MySuperSocketKestrelCore
 {
-    public interface IPipelineFilter<TPackageInfo>
-        where TPackageInfo : class
+    public interface IPipelineFilter
     {
-        TPackageInfo Filter(ref ReadOnlySequence<byte> buffer);
+        AnalyzedPacket Filter(ref ReadOnlySequence<byte> buffer);
 
-        IPipelineFilter<TPackageInfo> NextFilter { get; }
+        IPipelineFilter NextFilter { get; }
+    }
+
+
+    public class AnalyzedPacket
+    {
+        public UInt64 SessionUniqueId;
+        public UInt16 PacketId;
+        public byte[] Head;
+        public byte[] Body;
     }
 }

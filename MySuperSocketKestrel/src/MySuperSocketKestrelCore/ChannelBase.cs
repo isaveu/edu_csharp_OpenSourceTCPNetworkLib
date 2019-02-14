@@ -3,21 +3,20 @@ using System.Threading.Tasks;
 
 namespace MySuperSocketKestrelCore
 {
-    public abstract class ChannelBase<TPackageInfo> : IChannel<TPackageInfo>, IChannel
-        where TPackageInfo : class
+    public abstract class ChannelBase : IChannel
     {
         public abstract Task ProcessRequest();
         public abstract Task SendAsync(ReadOnlySpan<byte> data);
 
-        private Action<IChannel, TPackageInfo> _packageReceived;
+        private Action<IChannel, AnalyzedPacket> _packageReceived;
 
-        public event Action<IChannel, TPackageInfo> PackageReceived
+        public event Action<IChannel, AnalyzedPacket> PackageReceived
         {
             add { _packageReceived += value; }
             remove { _packageReceived -= value; }
         }
 
-        protected void OnPackageReceived(TPackageInfo package)
+        protected void OnPackageReceived(AnalyzedPacket package)
         {
             _packageReceived?.Invoke(this, package);
         }

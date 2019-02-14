@@ -14,6 +14,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="FilterResult.cs" />
+    <Compile Remove="LinePackageInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="NLog.Extensions.Logging" Version="1.4.0" />
   </ItemGroup>

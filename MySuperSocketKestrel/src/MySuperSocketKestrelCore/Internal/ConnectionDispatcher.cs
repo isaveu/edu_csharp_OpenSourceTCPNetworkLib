@@ -15,9 +15,8 @@ namespace MySuperSocketKestrelCore
         int SessionCount { get; }
     }
 
-    public class ConnectionDispatcher<TPackageInfo, TPipelineFilter> : ISuperSocketConnectionDispatcher
-        where TPackageInfo : class
-        where TPipelineFilter : IPipelineFilter<TPackageInfo>, new()
+    public class ConnectionDispatcher<TPipelineFilter> : ISuperSocketConnectionDispatcher
+        where TPipelineFilter : IPipelineFilter, new()
     {
         private int _sessionCount;
 
@@ -43,7 +42,7 @@ namespace MySuperSocketKestrelCore
             connection.Application = pair.Application;
 
 
-            var session = new AppSession<TPackageInfo>(connection, new TPipelineFilter());
+            var session = new AppSession(connection, new TPipelineFilter());
 
             Interlocked.Increment(ref _sessionCount);
 

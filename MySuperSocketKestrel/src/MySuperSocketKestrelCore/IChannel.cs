@@ -10,11 +10,8 @@ namespace MySuperSocketKestrelCore
         Task SendAsync(ReadOnlySpan<byte> data);
 
         event EventHandler Closed;
+
+        event Action<IChannel, AnalyzedPacket> PackageReceived;
     }
 
-    public interface IChannel<TPackageInfo> : IChannel
-        where TPackageInfo : class
-    {
-        event Action<IChannel, TPackageInfo> PackageReceived;
-    }
 }
