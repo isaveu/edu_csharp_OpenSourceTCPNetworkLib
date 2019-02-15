@@ -9,12 +9,15 @@ namespace MySuperSocketKestrelCore
 {
     public class AppSession
     {
-        public AppSession(/*TransportConnection transportConnection,*/ ChannelBase channel)
+        public void SetChannel(ChannelBase channel)
         {
             Channel = channel;
         }
 
- 
+        public string SessionID { get; private set; }
+
+        public UInt64 UniqueId { get; private set; }
+
         public ChannelBase Channel { get; private set; }
     }
 }

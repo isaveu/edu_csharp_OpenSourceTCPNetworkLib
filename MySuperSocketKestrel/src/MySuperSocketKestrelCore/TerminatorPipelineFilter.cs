@@ -1,7 +1,6 @@
 using System;
 using System.Buffers;
-using System.Collections;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace MySuperSocketKestrelCore
 {
@@ -33,7 +32,7 @@ namespace MySuperSocketKestrelCore
             }
             catch(Exception ex)
             {
-                //TODO ex 로그 남기기
+                GLogging.Logger().LogError($"Failed to Filter {ex.ToString()}");
                 return null;
             }
         }

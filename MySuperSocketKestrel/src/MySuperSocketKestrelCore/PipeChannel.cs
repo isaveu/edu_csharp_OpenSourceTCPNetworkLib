@@ -3,21 +3,41 @@ using System.Buffers;
 using System.Threading.Tasks;
 using System.IO.Pipelines;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
-
+using Microsoft.Extensions.Logging;
 
 namespace MySuperSocketKestrelCore
 {
-    public class PipeChannel : ChannelBase
+    // 파일 이름도 바꾸기
+    public class TcpPipeChannel : ChannelBase
     {
         private IPipelineFilter _pipelineFilter;
 
         private TransportConnection _transportConnection;
-        
-        public PipeChannel(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
+
+
+        const Int64 ENABLE_SENDING = 1;
+        Int64 IsEnableSending = ENABLE_SENDING;
+        TcpSendState CurSendState = TcpSendState.NORMAL;
+        Int64 CurrentSendingLength = 0;
+
+        Int32 MaxSendPacketSize = 0;
+        Int32 MaxSendingSize = 0;
+        Int32 MaxSendReTryCount = 0;
+
+
+        public TcpPipeChannel(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
         {
             _transportConnection = transportConnection;
             _pipelineFilter = pipelineFilter;
         }
+
+        public override void SetSendOption(int maxPacketSize, int maxSendingSize, int maxReTryCount)
+        {
+            MaxSendPacketSize = maxPacketSize;
+            MaxSendingSize = maxSendingSize;
+            MaxSendReTryCount = maxReTryCount;
+        }
+
 
         public override async Task ProcessRequest()
         {
@@ -66,7 +86,8 @@ namespace MySuperSocketKestrelCore
             }
             catch // 접속이 끊어지면 catch가 호출된다
             {
-                Console.WriteLine($"Dis Connected: {_transportConnection.ConnectionId} , threadId:{System.Threading.Thread.CurrentThread.ManagedThreadId}");
+                OnClosed();
+                GLogging.Logger().LogDebug($"Dis Connected: {_transportConnection.ConnectionId} , threadId:{System.Threading.Thread.CurrentThread.ManagedThreadId}");
             }
             finally
             {                    
@@ -84,14 +105,60 @@ namespace MySuperSocketKestrelCore
 
         public override Task SendAsync(ReadOnlySpan<byte> buffer)
         {
+            if(IsEnableSend() == false)
+            {
+                return Task.CompletedTask;
+            }
+
+            //if (IsSendingTooMuch())
+            //{
+            //    SetInvalideSendState(TcpSendState.SENDING_SIZE_OVER);
+            //    return Task.CompletedTask;
+            //}
+
+            //TODO pipe.Output의 남은 양을 조사해서 크면 중단하도록 해야 한다.
+
             var pipe = _transportConnection.Transport;
             pipe.Output.Write(buffer);  //WriteAsyn를 사용하면 아래의 FlushAsync 사용할 필요 없음
             return FlushAsync(pipe.Output);
+        }
+        public override Task SendAsync(ArraySegment<byte> buffer)
+        {
+            return SendAsync((ReadOnlySpan<byte>)buffer);
         }
 
         async Task FlushAsync(PipeWriter buffer)
         {
             await buffer.FlushAsync();
         }
+
+
+        void SetInvalideSendState(TcpSendState state)
+        {
+            if (System.Threading.Interlocked.CompareExchange(ref IsEnableSending, 0, 1) == 0)
+            {
+                CurSendState = state;
+            }
+        }
+
+        bool IsEnableSend()
+        {
+            return System.Threading.Interlocked.Read(ref IsEnableSending) == ENABLE_SENDING;
+        }
+
+        bool IsSendingTooMuch()
+        {
+            return System.Threading.Interlocked.Read(ref CurrentSendingLength) > MaxSendingSize;
+        }
     }
+
+
+    public enum TcpSendState
+    {
+        NORMAL = 0,
+        SENDING_SIZE_OVER = 1,
+        RE_TRY_OVER = 2,
+        RISE_EXCEPTION = 3
+    }
+
 }

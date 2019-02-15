@@ -19,8 +19,7 @@ namespace MySuperSocketKestrelCore
         public CancellationToken ApplicationStopped => CancellationToken.None;
 
         public void StopApplication()
-        {
-            
+        {            
         }
     }
 }

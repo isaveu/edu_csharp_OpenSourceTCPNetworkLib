@@ -7,11 +7,16 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using NLog.Extensions.Logging;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 
 namespace MySuperSocketKestrelCore
 {
     public class SuperSocketServer : IServer
     {
+        public Action<AppSession> NetEventOnConnect;
+        public Action<AppSession> NetEventOnCloese;
+        public Action<AppSession, AnalyzedPacket> NetEventOnReceive;
+
         private IServiceCollection _serviceCollection;
 
         private IServiceProvider _serviceProvider;
@@ -33,71 +38,106 @@ namespace MySuperSocketKestrelCore
 
         protected internal ILoggerFactory LoggerFactory { get; private set; }
 
-        private Microsoft.Extensions.Logging.ILogger _logger;
+        static public Microsoft.Extensions.Logging.ILogger GetLogger() { return _logger; }
+        static private Microsoft.Extensions.Logging.ILogger _logger;
+
 
         private bool _configured = false;
 
-        private ISuperSocketConnectionDispatcher _connectionDispatcher;
+        //private ISuperSocketConnectionDispatcher _connectionDispatcher;
 
         private ITransportFactory _transportFactory;
-        
-        public bool Configure<TPipelineFilter>(ServerOptions options, 
-                                                                                                                IServiceCollection services = null, 
-                                                                                                                ITransportFactory transportFactory = null, 
-                                                                                                                Action<AppSession, AnalyzedPacket> packageHandler = null
-            )
-            where TPipelineFilter : IPipelineFilter, new()
+
+
+        public void CreateSocketServer(ServerBuildParameter parameter, List<IPipelineFilter> pipelineFilterFactoryList)
         {
+            NetEventOnConnect = parameter.NetEventOnConnect;
+            NetEventOnCloese = parameter.NetEventOnCloese;
+            NetEventOnReceive = parameter.NetEventOnReceive;
+                       
+
+            var services = new ServiceCollection();
+            services.AddLogging();
+
+            services.AddSingleton<ITransportFactory, SocketTransportFactory>(); // SocketTransportFactory를 외부에서 받도록 한다.
+            
+            Configure(parameter.serverOption, services, pipelineFilterFactoryList);
+        }
+
+
+        public bool Configure(ServerOptions options,  IServiceCollection services, 
+                                                                                                                List<IPipelineFilter> pipelineFilterList
+            )
+        {
+            // 함수 쪼개기
             if (options == null)
+            {
                 throw new ArgumentNullException(nameof(options));
+            }
 
             Options = options;
 
-
-            _transportFactory = transportFactory;
-                
             if (services == null)
+            {
                 services = new ServiceCollection();
+            }
 
             _serviceCollection = services.AddOptions(); // activate options     
 
-            _serviceCollection.AddSingleton<IApplicationLifetime, SuperSocketApplicationLifetime>();
+            _serviceCollection.AddSingleton<IApplicationLifetime, SuperSocketApplicationLifetime>(); // ?
 
             _serviceProvider = services.BuildServiceProvider();
 
-            // initialize logger factory  // 기본 콘솔 로그 사용 시
-            //LoggerFactory = _serviceProvider.GetService<ILoggerFactory>();
-            //_logger = LoggerFactory.CreateLogger("SuperSocket");
             LoggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             LoggerFactory.AddNLog();
             _logger = LoggerFactory.CreateLogger("SuperSocket");
- 
+
+
+            _transportFactory = _serviceProvider.GetRequiredService<ITransportFactory>();
             if (_transportFactory == null)
             {
-                _transportFactory = _serviceProvider.GetRequiredService<ITransportFactory>();
-                
-                if (_transportFactory == null)
-                {
-                    throw new ArgumentNullException(nameof(transportFactory));
-                }
+                throw new ArgumentNullException(nameof(ITransportFactory));
             }
 
-            _connectionDispatcher = new ConnectionDispatcher<TPipelineFilter>();
-
             _transports = new List<ITransport>();
-
+                        
+            var index = 0;
             foreach (var l in options.Listeners)
             {
-                _transports.Add(_transportFactory.Create(new SuperSocketEndPointInformation(l), _connectionDispatcher));
+                AppSession CreateSession(TransportConnection connection)
+                {
+                    var session = new AppSession();
+
+                    void OnPackageReceived(AnalyzedPacket packet)
+                    {
+                        NetEventOnReceive(session, packet);
+                    }
+
+                    void CloseEvent()
+                    {
+                        NetEventOnCloese(session);
+                    }
+
+                    var channel = new TcpPipeChannel(connection, pipelineFilterList[index]);
+                    channel.OnPackageReceived = OnPackageReceived;
+                    channel.OnClosed = CloseEvent;
+                    channel.SetSendOption(l.MaxSendPacketSize, l.MaxSendingSize, l.MaxSendReTryCount);
+
+                    session.SetChannel(channel);
+
+                    NetEventOnConnect(session);
+                    return session;
+                }
+
+                var connectionDispatcher = new ConnectionDispatcher();
+                connectionDispatcher.NewClientAccepted = CreateSession;
+                _transports.Add(_transportFactory.Create(new SuperSocketEndPointInformation(l), connectionDispatcher));
             }
 
             return _configured = true;
         }
 
-        public int SessionCount
-        {
-            get { return _connectionDispatcher.SessionCount; }
-        }
+        
 
         public async Task<bool> StartAsync()
         {

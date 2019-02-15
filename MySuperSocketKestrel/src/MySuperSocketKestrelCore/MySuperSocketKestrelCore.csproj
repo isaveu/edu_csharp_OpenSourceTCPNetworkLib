@@ -17,12 +17,22 @@
     <Compile Remove="FilterResult.cs" />
     <Compile Remove="IAppSession.cs" />
     <Compile Remove="IChannel.cs" />
+    <Compile Remove="IListener.cs" />
+    <Compile Remove="IListenerFactory.cs" />
     <Compile Remove="LinePackageInfo.cs" />
+    <Compile Remove="TcpSocketListener.cs" />
+    <Compile Remove="TcpSocketListenerFactory.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="NLog.Extensions.Logging" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="C3SockNetUtil">
+      <HintPath>..\thirdparty\C3SockNetUtil.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
