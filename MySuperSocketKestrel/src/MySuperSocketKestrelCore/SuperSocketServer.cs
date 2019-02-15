@@ -43,10 +43,10 @@ namespace MySuperSocketKestrelCore
 
 
         private bool _configured = false;
-
-        //private ISuperSocketConnectionDispatcher _connectionDispatcher;
-
+                
         private ITransportFactory _transportFactory;
+
+        C3SockNetUtil.IUniqueIdGenerator SessionUniqueIdGen = new C3SockNetUtil.UniqueIdGenSimple();
 
 
         public void CreateSocketServer(ServerBuildParameter parameter, List<IPipelineFilter> pipelineFilterFactoryList)
@@ -65,11 +65,8 @@ namespace MySuperSocketKestrelCore
         }
 
 
-        public bool Configure(ServerOptions options,  IServiceCollection services, 
-                                                                                                                List<IPipelineFilter> pipelineFilterList
-            )
+        public bool Configure(ServerOptions options,  IServiceCollection services, List<IPipelineFilter> pipelineFilterList)
         {
-            // ÇÔ¼ö ÂÉ°³±â
             if (options == null)
             {
                 throw new ArgumentNullException(nameof(options));
@@ -103,68 +100,65 @@ namespace MySuperSocketKestrelCore
                         
             var index = 0;
             foreach (var l in options.Listeners)
-            {
-                AppSession CreateSession(TransportConnection connection)
-                {
-                    var session = new AppSession();
-
-                    void OnPackageReceived(AnalyzedPacket packet)
-                    {
-                        NetEventOnReceive(session, packet);
-                    }
-
-                    void CloseEvent()
-                    {
-                        NetEventOnCloese(session);
-                    }
-
-                    var channel = new TCPPipeChannel(connection, pipelineFilterList[index]);
-                    channel.OnPackageReceived = OnPackageReceived;
-                    channel.OnClosed = CloseEvent;
-                    channel.SetSendOption(l.MaxSendPacketSize, l.MaxSendingSize, l.MaxSendReTryCount);
-
-                    session.SetChannel(channel);
-
-                    NetEventOnConnect(session);
-                    return session;
-                }
+            {                
+                var CreateSessionFunc = CreateConnectionFunc(l, pipelineFilterList[index]);
 
                 var connectionDispatcher = new ConnectionDispatcher();
-                connectionDispatcher.NewClientAccepted = CreateSession;
+                connectionDispatcher.NewClientAccepted = CreateSessionFunc;
                 _transports.Add(_transportFactory.Create(new SuperSocketEndPointInformation(l), connectionDispatcher));
             }
 
             return _configured = true;
         }
 
-        
+        Func<TransportConnection, AppSession> CreateConnectionFunc(ListenOptions option, IPipelineFilter pipelineFilter)
+        {
+            return (x) => { 
+                var session = new AppSession();
+
+                void OnPackageReceived(AnalyzedPacket packet)
+                {
+                    NetEventOnReceive(session, packet);
+                }
+
+                void CloseEvent()
+                {
+                    NetEventOnCloese(session);
+                }
+
+                var channel = new TCPPipeChannel(x, pipelineFilter);
+                channel.OnPackageReceived = OnPackageReceived;
+                channel.OnClosed = CloseEvent;
+                channel.SetSendOption(option.MaxSendPacketSize, option.MaxSendingSize, option.MaxSendReTryCount);
+
+                session.SetChannel(channel);
+                session.SetUniqueId(NextSessionUniqueId(), Guid.NewGuid().ToString());
+
+                NetEventOnConnect(session);
+                return session;
+            };
+        }
 
         public async Task<bool> StartAsync()
         {
             if (!_configured)
+            {
                 _logger.LogError("The server has not been initialized successfully!");
-
-            var binded = 0;
-
+            }
+                        
             foreach (var transport in _transports)
             {
                 try
                 {
                     await transport.BindAsync();
-                    binded++;
                 }
                 catch (Exception e)
                 {
                     _logger.LogError(e, $"Failed to bind the transport {transport.ToString()}.");
+                    return false;
                 }
             }
-
-            if (binded == 0)
-            {
-                _logger.LogCritical("No transport binded successfully.");
-                return false;
-            }
-
+                        
             _logger.LogInformation("Server Start !!!");
             return true;
         }
@@ -174,7 +168,11 @@ namespace MySuperSocketKestrelCore
             foreach (var transport in _transports)
             {
                 await transport.UnbindAsync();
+                await transport.StopAsync();
             }
         }
+
+
+        public UInt64 NextSessionUniqueId() { return SessionUniqueIdGen.NextId(); }
     }
 }

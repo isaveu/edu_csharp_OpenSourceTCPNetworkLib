@@ -14,6 +14,12 @@ namespace MySuperSocketKestrelCore
             Channel = channel;
         }
 
+        public void SetUniqueId(UInt64 number, string text)
+        {
+            UniqueId = number;
+            SessionID = text;
+        }
+
         public string SessionID { get; private set; }
 
         public UInt64 UniqueId { get; private set; }

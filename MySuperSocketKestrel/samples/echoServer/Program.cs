@@ -21,7 +21,7 @@ namespace TestApp
 
         static void Main(string[] args)
         {
-            RunAsyncVer().Wait();
+            RunAsync().Wait();
         }
 
         static void NetEventOnConnect(AppSession session)
@@ -46,26 +46,12 @@ namespace TestApp
             Buffer.BlockCopy(BitConverter.GetBytes(pktID), 0, dataSource, 2, 2);
             dataSource[4] = 0;
             Buffer.BlockCopy(packet.Body, 0, dataSource, 5, packet.Body.Length);
-            //session.Channel.SendTask(packet.Body.AsMemory());
+            session.Channel.SendAsync(packet.Body.AsSpan());
         }
 
-        static async Task RunAsyncVer()
+        static async Task RunAsync()
         {
-            var parameter = new ServerBuildParameter();
-            parameter.NetEventOnConnect = NetEventOnConnect;
-            parameter.NetEventOnCloese = NetEventOnCloese;
-            parameter.NetEventOnReceive = NetEventOnReceive;
-            parameter.serverOption.Name = "TestServer";
-            parameter.serverOption.Listeners = new ListenOptions[1];
-            parameter.serverOption.Listeners[0] = new ListenOptions();
-            parameter.serverOption.Listeners[0].Ip = "Any";
-            parameter.serverOption.Listeners[0].Port = 11021;
-            parameter.serverOption.Listeners[0].BackLog = 100;
-            parameter.serverOption.Listeners[0].MaxRecvPacketSize = 512; //TODO 적용 안됨
-            parameter.serverOption.Listeners[0].MaxReceivBufferSize = 512 * 3;//TODO 적용 안됨
-            parameter.serverOption.Listeners[0].MaxSendPacketSize = 1024;
-            parameter.serverOption.Listeners[0].MaxSendingSize = 4096;
-            parameter.serverOption.Listeners[0].MaxSendReTryCount = 3;
+            var parameter = BuildOption();
 
             var pipelineFilterList = new List<IPipelineFilter>();
             pipelineFilterList.Add(new BinaryPipelineFilter());
@@ -86,44 +72,26 @@ namespace TestApp
             await server.StopAsync();
         }
 
+        static ServerBuildParameter BuildOption()
+        {
+            var parameter = new ServerBuildParameter();
+            parameter.NetEventOnConnect = NetEventOnConnect;
+            parameter.NetEventOnCloese = NetEventOnCloese;
+            parameter.NetEventOnReceive = NetEventOnReceive;
+            parameter.serverOption.Name = "TestServer";
+            parameter.serverOption.Listeners = new ListenOptions[1];
+            parameter.serverOption.Listeners[0] = new ListenOptions();
+            parameter.serverOption.Listeners[0].Ip = "Any";
+            parameter.serverOption.Listeners[0].Port = 11021;
+            parameter.serverOption.Listeners[0].BackLog = 100;
+            parameter.serverOption.Listeners[0].MaxRecvPacketSize = 512; //TODO 적용 안됨
+            parameter.serverOption.Listeners[0].MaxReceivBufferSize = 512 * 3;//TODO 적용 안됨
+            parameter.serverOption.Listeners[0].MaxSendPacketSize = 1024;
+            parameter.serverOption.Listeners[0].MaxSendingSize = 4096;
+            parameter.serverOption.Listeners[0].MaxSendReTryCount = 3;
 
-        //static IServer CreateSocketServer<TPipelineFilter>(Dictionary<string, string> configDict = null, Action<AppSession, AnalyzedPacket> packageHandler = null)
-        //    where TPipelineFilter : IPipelineFilter, new()
-        //{
-        //    if (configDict == null)
-        //    {
-        //        configDict = new Dictionary<string, string>
-        //        {
-        //            { "name", "TestServer" },
-        //            { "listeners:0:ip", "Any" },
-        //            { "listeners:0:port", "11021" },
-        //            { "listeners:0:backLog", "100" }
-        //        };
-        //    }
+            return parameter;
+        }
 
-        //    var server = new SuperSocketServer();
-        //    var services = new ServiceCollection();
-
-        //    var builder = new ConfigurationBuilder().AddInMemoryCollection(configDict);
-        //    var serverOptions = new ServerOptions();
-
-        //    var config = builder.Build();
-        //    config.Bind(serverOptions);
-
-        //    services.AddLogging();
-
-        //    RegisterServices(services);
-
-        //    server.Configure<TPipelineFilter>(serverOptions, services, packageHandler: packageHandler);
-           
-        //    return server;
-        //}
-
-        //static void RegisterServices(IServiceCollection services)
-        //{
-        //    services.AddSingleton<ITransportFactory, SocketTransportFactory>();
-        //}
-
-        
     }
 }
