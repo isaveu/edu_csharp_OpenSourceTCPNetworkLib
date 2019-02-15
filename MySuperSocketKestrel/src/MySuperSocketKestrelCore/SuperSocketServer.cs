@@ -118,7 +118,7 @@ namespace MySuperSocketKestrelCore
                         NetEventOnCloese(session);
                     }
 
-                    var channel = new TcpPipeChannel(connection, pipelineFilterList[index]);
+                    var channel = new TCPPipeChannel(connection, pipelineFilterList[index]);
                     channel.OnPackageReceived = OnPackageReceived;
                     channel.OnClosed = CloseEvent;
                     channel.SetSendOption(l.MaxSendPacketSize, l.MaxSendingSize, l.MaxSendReTryCount);

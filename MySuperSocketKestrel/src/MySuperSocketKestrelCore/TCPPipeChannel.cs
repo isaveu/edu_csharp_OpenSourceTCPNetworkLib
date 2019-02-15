@@ -7,8 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MySuperSocketKestrelCore
 {
-    // 파일 이름도 바꾸기
-    public class TcpPipeChannel : ChannelBase
+    public class TCPPipeChannel : ChannelBase
     {
         private IPipelineFilter _pipelineFilter;
 
@@ -25,7 +24,7 @@ namespace MySuperSocketKestrelCore
         Int32 MaxSendReTryCount = 0;
 
 
-        public TcpPipeChannel(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
+        public TCPPipeChannel(TransportConnection transportConnection, IPipelineFilter pipelineFilter)
         {
             _transportConnection = transportConnection;
             _pipelineFilter = pipelineFilter;
@@ -41,7 +40,6 @@ namespace MySuperSocketKestrelCore
 
         public override async Task ProcessRequest()
         {
-            //TODO 패킷이 미완성 상태로 왔을 때 다음에 받는 것과 잘 조립 되는지 확인 필요하다
             var input = _transportConnection.Transport.Input;//_transportConnection.Application.Input;
             var currentPipelineFilter = _pipelineFilter;
                         

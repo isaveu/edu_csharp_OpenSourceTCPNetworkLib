@@ -20,6 +20,7 @@
     <Compile Remove="IListener.cs" />
     <Compile Remove="IListenerFactory.cs" />
     <Compile Remove="LinePackageInfo.cs" />
+    <Compile Remove="PipeChannel.cs" />
     <Compile Remove="TcpSocketListener.cs" />
     <Compile Remove="TcpSocketListenerFactory.cs" />
   </ItemGroup>
