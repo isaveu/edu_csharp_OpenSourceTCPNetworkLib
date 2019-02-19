@@ -114,7 +114,8 @@ namespace MySuperSocketCore
             channel.SetRecvOption(option.MaxRecvPacketSize, option.MaxReceivBufferSize);
             channel.SetSendOption(option.MaxSendPacketSize, option.MaxSendingSize, option.MaxReTryCount);
 
-            var session = new AppSession(this, channel);
+            //TODO 이 세션 객체를 컨테이너에 저장하고 있다가. 이 함수를 나갈 때 제거해야 한다.
+            var session = new AppSession(NextSessionUniqueId(), channel);
 
             NetEventOnConnect(session);
 
